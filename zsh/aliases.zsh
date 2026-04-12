@@ -38,13 +38,10 @@ alias glum="git pull upstream main"
 alias gcm="git checkout main"
 
 # hub
-alias noproxy="http_proxy= HTTP_PROXY= https_proxy= HTTPS_PROXY="
 alias git="hub"
 alias pr="g pull-request --no-edit"
 alias ci="g ci-status"
 alias show-pr="g pr show"
-alias hub="noproxy hub"
-alias go="noproxy go"
 
 # navigation
 alias personal="vim ~/code/personal_env"

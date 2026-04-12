@@ -1,11 +1,9 @@
 {
-  "http.proxyStrictSSL": false,
   "telemetry.enableTelemetry": false,
   "extensions.autoUpdate": false,
   "liveshare.connectionMode": "relay",
   "liveshare.anonymousGuestApproval": "reject",
   "liveshare.allowedDomains": [],
-  "python.pythonPath": "/Users/jshipp6/.pyenv/shims/python",
   "vim.statusBarColors.replace": "",
   "vim.insertModeKeyBindings": [
     {
@@ -33,9 +31,6 @@
   "[python]": {
     "editor.formatOnSave": true
   },
-  "[wsd]": {
-    "editor.tabSize": 2
-  },
   "python.formatting.blackPath": "black",
   "editor.fontSize": 10,
   "explorer.confirmDelete": false,
@@ -59,7 +54,6 @@
   "typescript.updateImportsOnFileMove.enabled": "always",
   "workbench.activityBar.visible": false,
   "redhat.telemetry.enabled": false,
-  "rplus.checkTsPath.enabled": false,
   "terminal.integrated.scrollback": 10000,
   "terminal.integrated.sendKeybindingsToShell": true,
   "go.inferGopath": true,

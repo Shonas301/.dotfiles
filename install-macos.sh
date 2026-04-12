@@ -6,7 +6,8 @@ set -e
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZSH_DIR="$REPO_DIR/zsh"
 VIM_DIR="$REPO_DIR/vim"
-CLAUDE_DIR="$REPO_DIR/claude"
+VSCODE_DIR="$REPO_DIR/vscode"
+VSCODE_USER_DIR="$HOME/Library/Application Support/Code/User"
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -91,16 +92,17 @@ else
     warn "no p10k.zsh found — run 'p10k configure' after setup"
 fi
 
-# ── claude code configs ───────────────────────────────────────────────
-step "claude configs"
-mkdir -p "$HOME/.claude"
+# ── vscode configs ────────────────────────────────────────────────────
+step "vscode configs"
+mkdir -p "$VSCODE_USER_DIR"
 for f in settings.json keybindings.json; do
-    if [[ -f "$HOME/.claude/$f" ]] && [[ ! -L "$HOME/.claude/$f" ]]; then
-        mv "$HOME/.claude/$f" "$HOME/.claude/$f.backup.$(date +%s)"
-        warn "backed up existing ~/.claude/$f"
+    target="$VSCODE_USER_DIR/$f"
+    if [[ -f "$target" ]] && [[ ! -L "$target" ]]; then
+        mv "$target" "$target.backup.$(date +%s)"
+        warn "backed up existing $target"
     fi
-    ln -sf "$CLAUDE_DIR/$f" "$HOME/.claude/$f"
-    info "~/.claude/$f -> $CLAUDE_DIR/$f"
+    ln -sf "$VSCODE_DIR/$f" "$target"
+    info "$target -> $VSCODE_DIR/$f"
 done
 
 # ── vim setup ─────────────────────────────────────────────────────────
@@ -193,6 +195,6 @@ echo ""
 echo "next steps:"
 echo "  1. restart your terminal or run: exec zsh"
 echo "  2. run 'p10k configure' to set up the prompt (if needed)"
-echo "  3. install coc.nvim language servers in vim:"
+echo "  3. install coc.nvim language servers (open vim, then run)"
 echo "     :CocInstall coc-json coc-pyright coc-go coc-tsserver coc-rust-analyzer"
 echo ""

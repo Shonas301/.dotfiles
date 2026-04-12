@@ -1,6 +1,6 @@
 # .dotfiles
 
-personal dev environment — zsh, vim, claude code. mac + ubuntu/debian.
+personal dev environment — zsh, vim, vscode. mac + ubuntu/debian.
 
 ## install
 
@@ -30,9 +30,9 @@ cd ~/.dotfiles
 │   └── p10k.zsh
 ├── vim/
 │   └── vimrc             # symlinked to ~/.vimrc (coc.nvim, fzf, ALE, polyglot)
-└── claude/
-    ├── settings.json     # symlinked to ~/.claude/settings.json
-    └── keybindings.json  # symlinked to ~/.claude/keybindings.json
+└── vscode/              # symlinked into VSCode user dir (OS-specific)
+    ├── settings.json     # mac: ~/Library/Application Support/Code/User/
+    └── keybindings.json  # linux: ~/.config/Code/User/
 ```
 
 ## what gets installed
