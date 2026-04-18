@@ -52,9 +52,31 @@ require("lazy").setup({
   "nathanaelkane/vim-indent-guides",
   { "nanotech/jellybeans.vim", lazy = false, priority = 1000 },
 
-  -- linting + completion
+  -- linting
   "dense-analysis/ale",
-  { "neoclide/coc.nvim", branch = "release" },
+
+  -- native LSP + mason (replaces coc.nvim). run :Mason to manage servers
+  { "mason-org/mason.nvim", opts = {} },
+  {
+    "mason-org/mason-lspconfig.nvim",
+    dependencies = { "mason-org/mason.nvim", "neovim/nvim-lspconfig" },
+    opts = {
+      ensure_installed = { "lua_ls", "pyright", "gopls", "ts_ls" },
+    },
+  },
+  "neovim/nvim-lspconfig",
+
+  -- completion: blink.cmp (rust fuzzy, batteries-included, LazyVim default)
+  {
+    "saghen/blink.cmp",
+    version = "1.*",
+    opts = {
+      keymap = { preset = "default" },
+      sources = { default = { "lsp", "path", "snippets", "buffer" } },
+      completion = { documentation = { auto_show = true } },
+      signature = { enabled = true },
+    },
+  },
 
   -- language support
   -- treesitter replaces vim-polyglot: real parse trees instead of regex syntax
@@ -148,7 +170,7 @@ vim.g.ale_fix_on_save = 1
 vim.g.ale_sign_error = "E"
 vim.g.ale_sign_warning = "W"
 
--- coc.nvim completion behavior
+-- completion behavior (blink.cmp honors these)
 vim.opt.completeopt = { "menuone", "noinsert", "noselect" }
 vim.opt.shortmess:append("c")
 
@@ -240,38 +262,17 @@ vim.api.nvim_create_autocmd({ "FocusLost", "WinLeave" }, {
   group = augroup, command = "silent! w",
 })
 
--- ############################ coc.nvim bindings ############################
--- tab / s-tab navigate completion, cr confirms
-vim.cmd([[
-  inoremap <silent><expr> <TAB>
-        \ coc#pum#visible() ? coc#pum#next(1) :
-        \ CheckBackspace() ? "\<Tab>" :
-        \ coc#refresh()
-  inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+-- ############################ LSP bindings ############################
+-- blink.cmp handles tab/s-tab/cr internally via its default preset
+-- wire blink completion capabilities into all LSP servers (nvim 0.11+)
+vim.lsp.config("*", { capabilities = require("blink.cmp").get_lsp_capabilities() })
 
-  inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
-                                \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-
-  function! CheckBackspace() abort
-    let col = col('.') - 1
-    return !col || getline('.')[col - 1]  =~# '\s'
-  endfunction
-
-  function! ShowDocumentation()
-    if CocAction('hasProvider', 'hover')
-      call CocActionAsync('doHover')
-    else
-      call feedkeys('K', 'in')
-    endif
-  endfunction
-]])
-
-vim.keymap.set("n", "gd", "<Plug>(coc-definition)", { silent = true })
-vim.keymap.set("n", "gy", "<Plug>(coc-type-definition)", { silent = true })
-vim.keymap.set("n", "gi", "<Plug>(coc-implementation)", { silent = true })
-vim.keymap.set("n", "gr", "<Plug>(coc-references)", { silent = true })
-vim.keymap.set("n", "K", ":call ShowDocumentation()<CR>", { silent = true })
-vim.keymap.set("n", "<leader>rn", "<Plug>(coc-rename)")
+vim.keymap.set("n", "gd",         vim.lsp.buf.definition,      { silent = true, desc = "lsp: goto definition" })
+vim.keymap.set("n", "gy",         vim.lsp.buf.type_definition, { silent = true, desc = "lsp: goto type def" })
+vim.keymap.set("n", "gi",         vim.lsp.buf.implementation,  { silent = true, desc = "lsp: goto impl" })
+vim.keymap.set("n", "gr",         vim.lsp.buf.references,      { silent = true, desc = "lsp: references" })
+vim.keymap.set("n", "K",          vim.lsp.buf.hover,           { silent = true, desc = "lsp: hover" })
+vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename,          { desc = "lsp: rename" })
 
 -- ############################ molten (jupyter) ############################
 -- all under <leader>m* to avoid clashing with fzf <leader>r etc
