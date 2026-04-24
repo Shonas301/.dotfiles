@@ -7,6 +7,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZSH_DIR="$REPO_DIR/zsh"
 VIM_DIR="$REPO_DIR/vim"
 NVIM_DIR="$REPO_DIR/nvim"
+KITTY_DIR="$REPO_DIR/kitty"
 VSCODE_DIR="$REPO_DIR/vscode"
 VSCODE_USER_DIR="$HOME/Library/Application Support/Code/User"
 
@@ -56,6 +57,20 @@ for pkg in "${PACKAGES[@]}"; do
         info "$pkg already installed"
     else
         brew install "$pkg" && info "$pkg installed" || warn "$pkg failed to install, skipping"
+    fi
+done
+
+# ── brew casks ────────────────────────────────────────────────────────
+step "brew casks"
+CASKS=(
+    kitty   # gpu terminal; config symlinked below
+)
+
+for cask in "${CASKS[@]}"; do
+    if brew list --cask "$cask" &>/dev/null 2>&1; then
+        info "$cask already installed"
+    else
+        brew install --cask "$cask" && info "$cask installed" || warn "$cask failed to install, skipping"
     fi
 done
 
@@ -176,6 +191,19 @@ if command -v nvim &>/dev/null; then
 else
     warn "nvim not found — skipping plugin sync"
 fi
+
+# ── kitty config ──────────────────────────────────────────────────────
+step "kitty"
+
+KITTY_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/kitty"
+mkdir -p "$KITTY_CONFIG"
+
+if [[ -f "$KITTY_CONFIG/kitty.conf" ]] && [[ ! -L "$KITTY_CONFIG/kitty.conf" ]]; then
+    mv "$KITTY_CONFIG/kitty.conf" "$KITTY_CONFIG/kitty.conf.backup.$(date +%s)"
+    warn "backed up existing kitty.conf"
+fi
+ln -sf "$KITTY_DIR/kitty.conf" "$KITTY_CONFIG/kitty.conf"
+info "$KITTY_CONFIG/kitty.conf -> $KITTY_DIR/kitty.conf"
 
 # ── vivid color cache ─────────────────────────────────────────────────
 step "vivid cache"

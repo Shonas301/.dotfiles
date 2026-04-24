@@ -8,6 +8,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZSH_DIR="$REPO_DIR/zsh"
 VIM_DIR="$REPO_DIR/vim"
 NVIM_DIR="$REPO_DIR/nvim"
+KITTY_DIR="$REPO_DIR/kitty"
 VSCODE_DIR="$REPO_DIR/vscode"
 VSCODE_USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/Code/User"
 
@@ -36,6 +37,7 @@ APT_PACKAGES=(
     vim-gtk3      # vim with +clipboard (no macvim on linux)
     neovim        # apt version may lag — fine for our config
     python3-venv  # needed for nvim remote-plugin venv (molten/pynvim)
+    kitty         # gpu terminal; config symlinked below
     lsd
     hub
     trash-cli     # provides trash-put (wrapped below)
@@ -210,6 +212,19 @@ if command -v nvim &>/dev/null; then
 else
     warn "nvim not found — skipping plugin sync"
 fi
+
+# ── kitty config ──────────────────────────────────────────────────────
+step "kitty"
+
+KITTY_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/kitty"
+mkdir -p "$KITTY_CONFIG"
+
+if [[ -f "$KITTY_CONFIG/kitty.conf" ]] && [[ ! -L "$KITTY_CONFIG/kitty.conf" ]]; then
+    mv "$KITTY_CONFIG/kitty.conf" "$KITTY_CONFIG/kitty.conf.backup.$(date +%s)"
+    warn "backed up existing kitty.conf"
+fi
+ln -sf "$KITTY_DIR/kitty.conf" "$KITTY_CONFIG/kitty.conf"
+info "$KITTY_CONFIG/kitty.conf -> $KITTY_DIR/kitty.conf"
 
 # ── vivid color cache ─────────────────────────────────────────────────
 step "vivid cache"
