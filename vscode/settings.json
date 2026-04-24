@@ -52,7 +52,6 @@
   "security.workspace.trust.untrustedFiles": "open",
   "window.nativeTabs": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
-  "workbench.activityBar.visible": false,
   "redhat.telemetry.enabled": false,
   "terminal.integrated.scrollback": 10000,
   "terminal.integrated.sendKeybindingsToShell": true,
@@ -84,5 +83,6 @@
   "liveshare.alwaysFollowHost": true,
   "yaml.validate": false,
   "telemetry.telemetryLevel": "off",
-  "window.zoomLevel": -1
+  "window.zoomLevel": -1,
+  "workbench.activityBar.location": "hidden"
 }
