@@ -6,6 +6,7 @@ set -e
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZSH_DIR="$REPO_DIR/zsh"
 VIM_DIR="$REPO_DIR/vim"
+NVIM_DIR="$REPO_DIR/nvim"
 VSCODE_DIR="$REPO_DIR/vscode"
 VSCODE_USER_DIR="$HOME/Library/Application Support/Code/User"
 
@@ -36,6 +37,7 @@ fi
 step "brew packages"
 PACKAGES=(
     macvim
+    neovim
     lsd
     vivid
     pyenv
@@ -134,6 +136,47 @@ else
 fi
 info "vim plugins installed"
 
+# ── neovim setup ──────────────────────────────────────────────────────
+step "neovim"
+
+NVIM_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
+NVIM_VENV="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/python-venv"
+mkdir -p "$NVIM_CONFIG"
+
+# symlink init.lua (back up pre-existing non-symlink)
+if [[ -f "$NVIM_CONFIG/init.lua" ]] && [[ ! -L "$NVIM_CONFIG/init.lua" ]]; then
+    mv "$NVIM_CONFIG/init.lua" "$NVIM_CONFIG/init.lua.backup.$(date +%s)"
+    warn "backed up existing init.lua"
+fi
+ln -sf "$NVIM_DIR/init.lua" "$NVIM_CONFIG/init.lua"
+info "$NVIM_CONFIG/init.lua -> $NVIM_DIR/init.lua"
+
+# dedicated python venv for remote plugins (molten needs pynvim + jupyter_client)
+if command -v python3 &>/dev/null; then
+    if [[ ! -d "$NVIM_VENV" ]]; then
+        python3 -m venv "$NVIM_VENV"
+        "$NVIM_VENV/bin/pip" install --quiet --upgrade pip
+        info "nvim python venv created at $NVIM_VENV"
+    else
+        info "nvim python venv already present"
+    fi
+    "$NVIM_VENV/bin/pip" install --quiet pynvim jupyter_client jupytext ipykernel nbformat \
+        && info "nvim python deps installed" \
+        || warn "nvim python deps install failed"
+else
+    warn "python3 not found — skipping nvim python venv"
+fi
+
+# headless sync — bootstraps lazy.nvim and installs plugins, then registers remote plugins
+if command -v nvim &>/dev/null; then
+    info "syncing neovim plugins..."
+    nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
+    nvim --headless "+UpdateRemotePlugins" +qa 2>/dev/null || true
+    info "neovim plugins synced"
+else
+    warn "nvim not found — skipping plugin sync"
+fi
+
 # ── vivid color cache ─────────────────────────────────────────────────
 step "vivid cache"
 if command -v vivid &>/dev/null; then
@@ -195,6 +238,6 @@ echo ""
 echo "next steps:"
 echo "  1. restart your terminal or run: exec zsh"
 echo "  2. run 'p10k configure' to set up the prompt (if needed)"
-echo "  3. install coc.nvim language servers (open vim, then run)"
+echo "  3. install coc.nvim language servers (open vim or nvim, then run)"
 echo "     :CocInstall coc-json coc-pyright coc-go coc-tsserver coc-rust-analyzer"
 echo ""
