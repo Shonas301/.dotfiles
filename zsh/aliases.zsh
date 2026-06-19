@@ -9,7 +9,7 @@ alias m="make"
 # os-specific — mac has pbcopy/pbpaste/mvim/open natively
 if [[ "$OSTYPE" == darwin* ]]; then
   alias chrome="open -a \"Google Chrome\""
-  alias vim="mvim -v"
+  alias vim="nvim"
 else
   # linux shims: pbcopy/pbpaste via xclip so `path` and friends keep working
   if command -v xclip &>/dev/null; then

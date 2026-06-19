@@ -46,3 +46,6 @@ esac
 
 # p10k config
 [[ ! -f "$DIR/p10k.zsh" ]] || source "$DIR/p10k.zsh"
+
+# rokit (roblox toolchain manager)
+export PATH="$HOME/.rokit/bin:$PATH"
