@@ -24,8 +24,23 @@ step()  { echo -e "\n${GREEN}==> $1${NC}"; }
 
 # sanity — debian/ubuntu only
 if ! command -v apt-get &>/dev/null; then
-    fail "apt-get not found — this script is for debian/ubuntu. use setup.sh on macOS."
+    fail "apt-get not found — this script is for debian/ubuntu. use install-macos.sh on macOS."
 fi
+
+# ── wsl detection / flag ──────────────────────────────────────────────
+# wsl is debian/ubuntu under windows: no gpu terminal, and the clipboard
+# bridges to the windows side. auto-detect, but allow --wsl / --no-wsl to force.
+WSL=0
+if [[ -n "$WSL_DISTRO_NAME" ]] || grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
+    WSL=1
+fi
+for arg in "$@"; do
+    case "$arg" in
+        --wsl)    WSL=1 ;;
+        --no-wsl) WSL=0 ;;
+    esac
+done
+[[ $WSL -eq 1 ]] && warn "wsl mode — skipping gpu terminal + gui vim, clipboard bridges to windows"
 
 # ── apt packages ──────────────────────────────────────────────────────
 step "apt packages"
@@ -34,22 +49,27 @@ APT_PACKAGES=(
     git
     curl
     build-essential
-    vim-gtk3      # vim with +clipboard (no macvim on linux)
     neovim        # apt version may lag — fine for our config
     python3-venv  # needed for nvim remote-plugin venv (molten/pynvim)
-    kitty         # gpu terminal; config symlinked below
     lsd
     hub
     trash-cli     # provides trash-put (wrapped below)
     fzf
     ripgrep
     cowsay
-    xclip         # pbcopy/pbpaste shim
+    xclip         # pbcopy/pbpaste shim (native linux; wsl bridges to windows)
     golang-go     # go toolchain (apt version may lag upstream)
     # pyenv build deps — needed if user later installs python versions
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
     libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
 )
+
+# gui-only bits: pointless under wsl (no gpu terminal / X). plain vim there.
+if [[ $WSL -eq 1 ]]; then
+    APT_PACKAGES+=(vim)            # plain vim; +clipboard needs X which wsl lacks
+else
+    APT_PACKAGES+=(vim-gtk3 kitty) # vim with +clipboard; gpu terminal
+fi
 
 sudo apt-get update
 sudo apt-get install -y "${APT_PACKAGES[@]}" || warn "some apt packages failed — continuing"
@@ -214,17 +234,22 @@ else
 fi
 
 # ── kitty config ──────────────────────────────────────────────────────
-step "kitty"
+if [[ $WSL -eq 1 ]]; then
+    step "kitty (skipped — wsl)"
+    info "no gpu terminal under wsl; use windows terminal / wezterm on the host"
+else
+    step "kitty"
 
-KITTY_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/kitty"
-mkdir -p "$KITTY_CONFIG"
+    KITTY_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/kitty"
+    mkdir -p "$KITTY_CONFIG"
 
-if [[ -f "$KITTY_CONFIG/kitty.conf" ]] && [[ ! -L "$KITTY_CONFIG/kitty.conf" ]]; then
-    mv "$KITTY_CONFIG/kitty.conf" "$KITTY_CONFIG/kitty.conf.backup.$(date +%s)"
-    warn "backed up existing kitty.conf"
+    if [[ -f "$KITTY_CONFIG/kitty.conf" ]] && [[ ! -L "$KITTY_CONFIG/kitty.conf" ]]; then
+        mv "$KITTY_CONFIG/kitty.conf" "$KITTY_CONFIG/kitty.conf.backup.$(date +%s)"
+        warn "backed up existing kitty.conf"
+    fi
+    ln -sf "$KITTY_DIR/kitty.conf" "$KITTY_CONFIG/kitty.conf"
+    info "$KITTY_CONFIG/kitty.conf -> $KITTY_DIR/kitty.conf"
 fi
-ln -sf "$KITTY_DIR/kitty.conf" "$KITTY_CONFIG/kitty.conf"
-info "$KITTY_CONFIG/kitty.conf -> $KITTY_DIR/kitty.conf"
 
 # ── vivid color cache ─────────────────────────────────────────────────
 step "vivid cache"
@@ -290,7 +315,10 @@ echo ""
 echo "next steps:"
 echo "  1. restart your terminal or run: exec zsh"
 echo "  2. run 'p10k configure' to set up the prompt (if needed)"
-echo "  3. install coc.nvim language servers (open vim or nvim, then run)"
-echo "     :CocInstall coc-json coc-pyright coc-go coc-tsserver coc-rust-analyzer"
+echo "  3. install language servers in nvim: open nvim, then run :Mason"
 echo "  4. if zsh isn't default yet: chsh -s \$(command -v zsh)"
+if [[ $WSL -eq 1 ]]; then
+echo "  5. (wsl) clipboard bridges to windows via clip.exe — for clean paste,"
+echo "     install win32yank.exe on PATH and pbpaste will use it automatically"
+fi
 echo ""

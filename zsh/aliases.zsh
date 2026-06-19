@@ -11,8 +11,17 @@ if [[ "$OSTYPE" == darwin* ]]; then
   alias chrome="open -a \"Google Chrome\""
   alias vim="nvim"
 else
-  # linux shims: pbcopy/pbpaste via xclip so `path` and friends keep working
-  if command -v xclip &>/dev/null; then
+  # linux shims: pbcopy/pbpaste so `path` and friends keep working
+  if [[ -n "$WSL_DISTRO_NAME" ]] || grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
+    # wsl: bridge to the windows clipboard — xclip would hit the (headless) linux side
+    if command -v win32yank.exe &>/dev/null; then
+      alias pbcopy="win32yank.exe -i --crlf"
+      alias pbpaste="win32yank.exe -o --lf"
+    else
+      alias pbcopy="clip.exe"
+      alias pbpaste="powershell.exe -NoProfile -Command Get-Clipboard"
+    fi
+  elif command -v xclip &>/dev/null; then
     alias pbcopy="xclip -selection clipboard"
     alias pbpaste="xclip -selection clipboard -o"
   elif command -v wl-copy &>/dev/null; then
