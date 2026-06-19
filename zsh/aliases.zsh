@@ -33,7 +33,13 @@ fi
 alias path="pwd | pbcopy"
 alias maket="make -qp | awk -F':' '/^[a-zA-Z0-9][^\$#\/\t=]*:([^=]|$)/ {split(\$1,A,/ /);for(i in A)print A[i]}' | sort -u"
 alias npm="pnpm"
-alias rm='/usr/local/opt/trash-cli/bin/trash-put'  # trash-cli swallows -rf for rm-compat; full path avoids brew link/shadow issues with /usr/bin/trash
+# rm -> trash-cli (swallows -rf for rm-compat). os-split: macos uses the brew
+# cellar path to dodge link/shadow issues with /usr/bin/trash; linux/wsl uses trash-put
+if [[ "$OSTYPE" == darwin* ]]; then
+  alias rm='/usr/local/opt/trash-cli/bin/trash-put'
+else
+  alias rm='trash-put'
+fi
 alias l='lsd -al'
 alias ls='lsd'
 alias lt='ls --tree --depth 2 --max-shown -1 -d --tree-columns'
