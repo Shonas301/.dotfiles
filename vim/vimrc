@@ -37,7 +37,6 @@ Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 " utilities
 Plug 'godlygeek/tabular'
 Plug 'dhruvasagar/vim-table-mode'
-Plug 'aserebryakov/vim-todo-lists'
 
 call plug#end()
 filetype plugin indent on
@@ -70,8 +69,6 @@ set colorcolumn=80
 " colorscheme
 set t_Co=256
 colorscheme jellybeans
-
-let g:VimTodoListsMoveItems = 0
 
 " fix cursor in tmux
 if exists('$TMUX')
@@ -123,7 +120,7 @@ au BufNewFile,BufRead *.tex set tw=80
 
 " folding
 au BufNewFile,BufRead *.py setlocal foldmethod=indent
-au BufNewFile,BufRead *.todo setlocal foldmethod=indent
+au BufNewFile,BufRead *.todo setlocal foldmethod=indent ft=markdown
 
 " yaml — 2 space indent
 au BufNewFile,BufRead *.yml set softtabstop=2 shiftwidth=2

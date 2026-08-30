@@ -80,29 +80,26 @@ require("lazy").setup({
 
   -- language support
   -- treesitter replaces vim-polyglot: real parse trees instead of regex syntax
+  -- main branch api: no configs module — install parsers explicitly, enable
+  -- highlight/indent per buffer via the FileType autocmd below
   {
     "nvim-treesitter/nvim-treesitter",
-    branch = "master",
+    branch = "main",
     build = ":TSUpdate",
-    main = "nvim-treesitter.configs",
-    event = { "BufReadPost", "BufNewFile" },
-    opts = {
-      ensure_installed = {
+    lazy = false,
+    config = function()
+      require("nvim-treesitter").install({
         "lua", "python", "go", "javascript", "typescript", "tsx",
         "ruby", "html", "css", "json", "yaml", "toml",
         "markdown", "markdown_inline", "bash", "vim", "vimdoc", "query",
-      },
-      auto_install = true,
-      highlight = { enable = true },
-      indent = { enable = true },
-    },
+      })
+    end,
   },
   { "fatih/vim-go", build = ":GoUpdateBinaries" },
 
   -- utilities
   "godlygeek/tabular",
   "dhruvasagar/vim-table-mode",
-  "aserebryakov/vim-todo-lists",
 
   -- jupyter / notebooks
   -- jupytext: transparently edit .ipynb as .py/.md
@@ -164,7 +161,6 @@ vim.opt.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50"
 vim.cmd("colorscheme jellybeans")
 
 -- ############################ plugin settings ############################
-vim.g.VimTodoListsMoveItems = 0
 vim.g.go_version_warning = 0
 vim.g.ale_fix_on_save = 1
 vim.g.ale_sign_error = "E"
@@ -207,6 +203,16 @@ vim.keymap.set("c", "%%", "<C-R>=expand('%:h').'/'<cr>")
 -- ############################ filetype autocmds ############################
 local augroup = vim.api.nvim_create_augroup("dotfiles", { clear = true })
 
+-- treesitter highlight + indent wherever a parser exists (main branch is opt-in)
+vim.api.nvim_create_autocmd("FileType", {
+  group = augroup,
+  callback = function(args)
+    if pcall(vim.treesitter.start, args.buf) then
+      vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    end
+  end,
+})
+
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
   group = augroup, pattern = "*.json.jbuilder",
   callback = function() vim.bo.filetype = "ruby" end,
@@ -229,10 +235,19 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
   callback = function() vim.opt_local.textwidth = 80 end,
 })
 
--- folding for python/todo
+-- folding for python
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
-  group = augroup, pattern = { "*.py", "*.todo" },
+  group = augroup, pattern = "*.py",
   callback = function() vim.opt_local.foldmethod = "indent" end,
+})
+
+-- todo files: markdown with indent folds
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+  group = augroup, pattern = "*.todo",
+  callback = function()
+    vim.opt_local.foldmethod = "indent"
+    vim.bo.filetype = "markdown"
+  end,
 })
 
 -- yaml — 2 space indent + indent folds
