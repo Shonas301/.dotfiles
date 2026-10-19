@@ -49,3 +49,4 @@ esac
 
 # rokit (roblox toolchain manager)
 export PATH="$HOME/.rokit/bin:$PATH"
+export P4CONFIG=.p4config

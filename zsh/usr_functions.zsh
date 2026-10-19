@@ -129,3 +129,11 @@ function delete_old_branches() {
 function readme() {
     (test -e README.md && echo "Readme already exists") || echo "${1}" >> README.md
 }
+
+function mdqc() {
+  if [[ -t 1 ]]; then
+    mdq "$@" | glow -w "${COLUMNS:-100}" -
+  else
+    mdq "$@"    # keep output clean when piped/redirected
+  fi
+}
