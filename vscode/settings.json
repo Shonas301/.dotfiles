@@ -1,6 +1,6 @@
 {
   "telemetry.enableTelemetry": false,
-  "extensions.autoUpdate": false,
+  "extensions.autoUpdate": "off",
   "liveshare.connectionMode": "relay",
   "liveshare.anonymousGuestApproval": "reject",
   "liveshare.allowedDomains": [],
